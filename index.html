@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <!-- Made by Gemini 2.5 Pro -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>乱数メーカー</title>
+    <style>
+        /* --- CSS --- */
+        /* 基本的なスタイル */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* 全体を囲むコンテナ */
+        .container {
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* タイトル */
+        h1 {
+            color: #1a73e8;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        /* 説明文 */
+        p {
+            color: #555;
+            margin-bottom: 25px;
+        }
+
+        /* 入力欄のグループ */
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        /* ラベル */
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+
+        /* 数値入力フィールド */
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
+        }
+
+        /* 生成ボタン */
+        button {
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #1a73e8;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: #1558b8;
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* 共有用のヒント */
+        .share-info {
+            font-size: 13px;
+            color: #777;
+            margin-top: 15px;
+            margin-bottom: 0px;
+        }
+
+        /* 結果表示エリア */
+        .result-area {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        /* 結果の数値 */
+        #result {
+            font-size: 48px;
+            font-weight: bold;
+            color: #1a73e8;
+            margin: 0;
+            min-height: 60px; /* 数値が表示されてもレイアウトが崩れないように */
+            line-height: 60px;
+        }
+        
+        /* エラーメッセージ */
+        #error {
+            color: #d93025;
+            font-weight: 500;
+            margin-top: 10px;
+            min-height: 1.2em; /* エラーメッセージ用のスペースを確保 */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- --- HTML --- -->
+    <div class="container">
+        <h1>乱数メーカー</h1>
+        <p>最小値と最大値を入力して、範囲内の整数をランダムに生成します。</p>
+
+        <div class="input-group">
+            <label for="min-input">最小値:</label>
+            <input type="number" id="min-input" value="1">
+        </div>
+
+        <div class="input-group">
+            <label for="max-input">最大値:</label>
+            <input type="number" id="max-input" value="100">
+        </div>
+
+        <button id="generate-btn">生成する</button>
+
+        <p class="share-info">ヒント: 生成後にURLをコピーすると、同じ設定を他の人と共有できます。</p>
+
+        <div class="result-area">
+            <p id="result">---</p>
+            <p id="error"></p>
+        </div>
+    </div>
+
+    <script>
+        // --- JavaScript ---
+        // ページが読み込まれたら実行
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // localStorageに保存するときのキーを定義
+            const STORAGE_KEY = 'randomNumberSettings';
+
+            // HTMLの要素を取得
+            const minInput = document.getElementById('min-input');
+            const maxInput = document.getElementById('max-input');
+            const generateBtn = document.getElementById('generate-btn');
+            const resultDisplay = document.getElementById('result');
+            const errorDisplay = document.getElementById('error');
+            
+            // ---【新規】URLのクエリパラメータから設定を読み込む関数 ---
+            function getSettingsFromURL() {
+                const params = new URLSearchParams(window.location.search);
+                const min = parseInt(params.get('min'), 10);
+                const max = parseInt(params.get('max'), 10);
+                
+                // minとmaxの両方が有効な数値である場合のみ設定を返す
+                if (!isNaN(min) && !isNaN(max)) {
+                    return { min, max };
+                }
+                return null;
+            }
+
+            // ---【更新】設定を読み込む関数 (URL優先) ---
+            function loadSettings() {
+                // 1. URLのクエリパラメータを最優先で読み込む
+                const urlSettings = getSettingsFromURL();
+                if (urlSettings) {
+                    minInput.value = urlSettings.min;
+                    maxInput.value = urlSettings.max;
+                    return; // URLから読み込めたので処理を終了
+                }
+
+                // 2. localStorageから読み込む
+                const savedSettingsJSON = localStorage.getItem(STORAGE_KEY);
+                if (savedSettingsJSON) {
+                    try {
+                        const savedSettings = JSON.parse(savedSettingsJSON);
+                        if (typeof savedSettings.min === 'number' && typeof savedSettings.max === 'number') {
+                            minInput.value = savedSettings.min;
+                            maxInput.value = savedSettings.max;
+                        }
+                    } catch (e) {
+                        console.error('設定の読み込みに失敗しました:', e);
+                        localStorage.removeItem(STORAGE_KEY);
+                    }
+                }
+                // 3. どちらにもなければHTMLのデフォルト値が使われる
+            }
+            
+            // --- localStorageへ設定を保存する関数 (変更なし) ---
+            function saveSettingsToLocalStorage(min, max) {
+                const settings = { min, max };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+            }
+            
+            // ---【新規】URLをクエリパラメータで更新する関数 ---
+            function updateURL(min, max) {
+                // 新しいURLを作成 (?min=...&max=...)
+                const newUrl = `${window.location.pathname}?min=${min}&max=${max}`;
+                // history.replaceStateでURLを書き換える（ページ遷移はしない）
+                history.replaceState(null, '', newUrl);
+            }
+
+            // 「生成する」ボタンがクリックされたときの処理を定義
+            function generateRandomNumber() {
+                errorDisplay.textContent = '';
+                resultDisplay.textContent = '...';
+
+                const min = parseInt(minInput.value, 10);
+                const max = parseInt(maxInput.value, 10);
+
+                if (isNaN(min) || isNaN(max)) {
+                    errorDisplay.textContent = '最小値と最大値の両方に数値を入力してください。';
+                    resultDisplay.textContent = '---';
+                    return;
+                }
+
+                if (min > max) {
+                    errorDisplay.textContent = '最小値は最大値以下の数値を指定してください。';
+                    resultDisplay.textContent = '---';
+                    return;
+                }
+                
+                // ---【更新】チェック通過後に各種保存処理を実行 ---
+                saveSettingsToLocalStorage(min, max); // localStorageに保存
+                updateURL(min, max);                   // URLを更新
+
+                const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+                resultDisplay.textContent = randomNumber;
+            }
+
+            // 各種イベントリスナーを登録
+            generateBtn.addEventListener('click', generateRandomNumber);
+            
+            minInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') generateRandomNumber();
+            });
+            maxInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') generateRandomNumber();
+            });
+
+            // ページの読み込み時に設定を復元
+            loadSettings();
+        });
+    </script>
+
+</body>
+</html>
