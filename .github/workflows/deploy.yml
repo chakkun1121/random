@@ -37,8 +37,8 @@ jobs:
       - name: Copy static files
         run: |
           cp index.html build/
-          cp style.css build/
-          cp app.js build/
+          # cp style.css build/
+          # cp app.js build/
           cp -r icons/ build/
 
       # 7. buildフォルダの内容をgh-pagesブランチにデプロイ
