@@ -1,0 +1,50 @@
+name: Deploy PWA to GitHub Pages
+
+# mainブランチにpushされたときに実行
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. リポジトリのコードをチェックアウト
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # 2. バージョン番号を生成（ビルド日時を使用）
+      - name: Generate version
+        id: version
+        run: echo "APP_VERSION=$(date +'%Y.%m.%d.%H%M%S')" >> $GITHUB_ENV
+
+      # 3. ビルド用の一時フォルダを作成
+      - name: Create build directory
+        run: mkdir build
+
+      # 4. manifest.jsonを生成
+      # manifest.json.templateの '__APP_VERSION__' を生成したバージョン番号に置換して、buildフォルダに保存
+      - name: Build manifest.json
+        run: sed "s/__APP_VERSION__/${{ env.APP_VERSION }}/g" manifest.json.template > build/manifest.json
+
+      # 5. service-worker.jsを生成
+      # service-worker.js.templateの '__CACHE_VERSION__' を生成したバージョン番号に置換して、buildフォルダに保存
+      - name: Build service-worker.js
+        run: sed "s/__CACHE_VERSION__/${{ env.APP_VERSION }}/g" service-worker.js.template > build/service-worker.js
+
+      # 6. その他の静的ファイルをbuildフォルダにコピー
+      - name: Copy static files
+        run: |
+          cp index.html build/
+          cp style.css build/
+          cp app.js build/
+          cp -r icons/ build/
+
+      # 7. buildフォルダの内容をgh-pagesブランチにデプロイ
+      # このアクションが自動でgh-pagesブランチを作成・更新してくれます
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build # デプロイするフォルダを指定
