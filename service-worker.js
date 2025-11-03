@@ -1,14 +1,12 @@
 // キャッシュ名にバージョンを埋め込むためのプレースホルダー
-const CACHE_NAME = 'my-simple-pwa-cache-2025.11.03.094328';
+const CACHE_NAME = 'my-simple-pwa-cache-2025.11.03.101559';
 
 // キャッシュするファイルのリスト
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/app.js',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  './',
+  './index.html',
+  './icons/icon-192x192.png',
+  './icons/icon-512x512.png'
 ];
 
 // installイベント: ファイルをキャッシュする
