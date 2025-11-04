@@ -1,5 +1,5 @@
 // キャッシュ名にバージョンを埋め込むためのプレースホルダー
-const CACHE_NAME = 'my-simple-pwa-cache-2025.11.03.101559';
+const CACHE_NAME = 'my-simple-pwa-cache-2025.11.04.063820';
 
 // キャッシュするファイルのリスト
 const urlsToCache = [

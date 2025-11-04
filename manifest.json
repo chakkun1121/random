@@ -53,9 +53,9 @@
       "type": "image/png"
     }
   ],
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
-  "version": "2025.11.03.101559"
+  "version": "2025.11.04.063820"
 }
