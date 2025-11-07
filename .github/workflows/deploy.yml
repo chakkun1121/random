@@ -27,12 +27,12 @@ jobs:
       # 4. manifest.jsonを生成
       # manifest.json.templateの '__APP_VERSION__' を生成したバージョン番号に置換して、buildフォルダに保存
       - name: Build manifest.json
-        run: sed "s/__APP_VERSION__/${{ env.APP_VERSION }}/g" manifest.json.template > build/manifest.json
+        run: sed "s/__APP_VERSION__/${{ env.APP_VERSION }}/g" manifest.template.json > build/manifest.json
 
       # 5. service-worker.jsを生成
       # service-worker.js.templateの '__CACHE_VERSION__' を生成したバージョン番号に置換して、buildフォルダに保存
       - name: Build service-worker.js
-        run: sed "s/__CACHE_VERSION__/${{ env.APP_VERSION }}/g" service-worker.js.template > build/service-worker.js
+        run: sed "s/__CACHE_VERSION__/${{ env.APP_VERSION }}/g" service-worker.template.js > build/service-worker.js
 
       # 6. その他の静的ファイルをbuildフォルダにコピー
       - name: Copy static files
